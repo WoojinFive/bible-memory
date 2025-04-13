@@ -77,42 +77,45 @@
             <h2>통계 및 순위</h2>
             
             <div class="stats-container">
-                <div class="stat-card">
-                    <h3>개인별 암송 현황</h3>
-                    <table id="individual-stats">
-                        <thead>
-                            <tr>
-                                <th>이름</th>
-                                <th>암송 완료</th>
-                                <th>달성률</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- 개인별 통계가 여기에 표시됩니다 -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="stat-card">
-                    <h3>구절별 암송 현황</h3>
-                    <table id="verse-stats">
-                        <thead>
-                            <tr>
-                                <th>구절</th>
-                                <th>암송자 수</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- 구절별 통계가 여기에 표시됩니다 -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="stat-card">
+                <div class="rankings-container stat-card">
                     <h3>🏆 암송 순위</h3>
-                    <ul class="rankings" id="rankings-list">
+                    <ol class="rankings" id="rankings-list">
                         <!-- 순위가 여기에 표시됩니다 -->
-                    </ul>
+                    </ol>
+                </div>
+                
+                <h3>상세 통계</h3>
+                <div class="secondary-stats">
+                    <div class="stat-card">
+                        <h3>개인별 암송 현황</h3>
+                        <table id="individual-stats">
+                            <thead>
+                                <tr>
+                                    <th>이름</th>
+                                    <th>암송 완료</th>
+                                    <th>달성률</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 개인별 통계가 여기에 표시됩니다 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>구절별 암송 현황</h3>
+                        <table id="verse-stats">
+                            <thead>
+                                <tr>
+                                    <th>구절</th>
+                                    <th>암송자 수</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 구절별 통계가 여기에 표시됩니다 -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
