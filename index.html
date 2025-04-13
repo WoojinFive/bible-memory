@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사순절 말씀 암송대회</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌟 사순절 말씀 암송대회 🌟</h1>
+            <p>교회 어린이부</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="verse">암송 구절</button>
+            <button class="tab-btn" data-tab="participants">참가자 관리</button>
+            <button class="tab-btn" data-tab="stats">통계 및 순위</button>
+        </div>
+
+        <div id="verse-tab" class="tab-content active">
+            <div class="verse-display">
+                <button class="copy-btn">복사</button>
+                <h2 class="verse-reference">참조 구절</h2>
+                <p class="verse-text">구절을 선택해주세요</p>
+            </div>
+
+            <div class="verse-answer">
+                <p class="answer-text"></p>
+            </div>
+
+            <div class="controls">
+                <button id="prev-verse" disabled>이전 구절</button>
+                <button id="show-answer" class="warning">정답 보기</button>
+                <button id="next-verse">다음 구절</button>
+            </div>
+
+            <div class="participants-area">
+                <h3>현재 구절 암송자</h3>
+                <div class="participant-list" id="current-verse-participants">
+                    <!-- 참가자들이 여기에 표시됩니다 -->
+                </div>
+                
+                <div class="add-participant">
+                    <select id="participant-select">
+                        <option value="">참가자 선택</option>
+                    </select>
+                    <button id="mark-complete" class="success">암송 완료</button>
+                    <button id="mark-incomplete" class="danger">취소</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="participants-tab" class="tab-content">
+            <h2>참가자 관리</h2>
+            <div class="add-participant">
+                <input type="text" id="new-participant" placeholder="새 참가자 이름">
+                <button id="add-participant-btn">추가</button>
+            </div>
+            
+            <table id="participants-table">
+                <thead>
+                    <tr>
+                        <th>이름</th>
+                        <th>암송 완료</th>
+                        <th>액션</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 참가자 목록이 여기에 표시됩니다 -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="stats-tab" class="tab-content">
+            <h2>통계 및 순위</h2>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>개인별 암송 현황</h3>
+                    <table id="individual-stats">
+                        <thead>
+                            <tr>
+                                <th>이름</th>
+                                <th>암송 완료</th>
+                                <th>달성률</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 개인별 통계가 여기에 표시됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>구절별 암송 현황</h3>
+                    <table id="verse-stats">
+                        <thead>
+                            <tr>
+                                <th>구절</th>
+                                <th>암송자 수</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 구절별 통계가 여기에 표시됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>🏆 암송 순위</h3>
+                    <ul class="rankings" id="rankings-list">
+                        <!-- 순위가 여기에 표시됩니다 -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+
+    <script src="verses.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
