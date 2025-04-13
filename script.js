@@ -2,6 +2,7 @@
 let currentVerseIndex = 0;
 let participants = [];
 let completions = {}; // 참가자별 암송 완료 구절 기록
+let partialCompletions = {}; // 참가자별 부분 암송 구절 기록
 
 // DOM 요소
 const tabBtns = document.querySelectorAll('.tab-btn');
@@ -16,6 +17,7 @@ const answerText = document.querySelector('.answer-text');
 const currentVerseParticipants = document.getElementById('current-verse-participants');
 const participantSelect = document.getElementById('participant-select');
 const markCompleteBtn = document.getElementById('mark-complete');
+const markPartialBtn = document.getElementById('mark-partial');
 const markIncompleteBtn = document.getElementById('mark-incomplete');
 const newParticipantInput = document.getElementById('new-participant');
 const addParticipantBtn = document.getElementById('add-participant-btn');
@@ -30,6 +32,7 @@ const celebration = document.getElementById('celebration');
 function loadData() {
   const savedParticipants = localStorage.getItem('versesParticipants');
   const savedCompletions = localStorage.getItem('versesCompletions');
+  const savedPartialCompletions = localStorage.getItem('versesPartialCompletions');
   const savedCurrentVerseIndex = localStorage.getItem('currentVerseIndex');
 
   if (savedParticipants) {
@@ -38,6 +41,18 @@ function loadData() {
 
   if (savedCompletions) {
     completions = JSON.parse(savedCompletions);
+  }
+
+  if (savedPartialCompletions) {
+    partialCompletions = JSON.parse(savedPartialCompletions);
+  } else {
+    // 이전 데이터와의 호환성을 위해 빈 객체 초기화
+    partialCompletions = {};
+    participants.forEach(p => {
+      if (!partialCompletions[p]) {
+        partialCompletions[p] = [];
+      }
+    });
   }
 
   if (savedCurrentVerseIndex !== null) {
@@ -49,6 +64,7 @@ function loadData() {
 function saveData() {
   localStorage.setItem('versesParticipants', JSON.stringify(participants));
   localStorage.setItem('versesCompletions', JSON.stringify(completions));
+  localStorage.setItem('versesPartialCompletions', JSON.stringify(partialCompletions));
   localStorage.setItem('currentVerseIndex', currentVerseIndex);
 }
 
@@ -102,7 +118,13 @@ function updateCurrentVerseParticipants() {
       participantCard.classList.add('completed');
       participantCard.innerHTML = `
                 <span>${participant}</span>
-                <span class="badge badge-success">완료</span>
+                <span class="badge badge-success">완료 (1점)</span>
+            `;
+    } else if (partialCompletions[participant] && partialCompletions[participant].includes(verseId)) {
+      participantCard.classList.add('partial');
+      participantCard.innerHTML = `
+                <span>${participant}</span>
+                <span class="badge badge-warning">부분 (0.5점)</span>
             `;
     } else {
       participantCard.innerHTML = `<span>${participant}</span>`;
@@ -127,7 +149,7 @@ function updateParticipantSelect() {
   });
 }
 
-// 암송 완료 표시
+// 암송 완료 표시 (1점)
 function markComplete() {
   const selectedParticipant = participantSelect.value;
 
@@ -142,11 +164,44 @@ function markComplete() {
     completions[selectedParticipant] = [];
   }
 
+  // 이미 부분 점수가 있다면 제거
+  if (partialCompletions[selectedParticipant] && partialCompletions[selectedParticipant].includes(verseId)) {
+    partialCompletions[selectedParticipant] = partialCompletions[selectedParticipant].filter(id => id !== verseId);
+  }
+
   if (!completions[selectedParticipant].includes(verseId)) {
     completions[selectedParticipant].push(verseId);
     saveData();
     updateCurrentVerseParticipants();
     showCelebration();
+  }
+}
+
+// 부분 암송 표시 (0.5점)
+function markPartial() {
+  const selectedParticipant = participantSelect.value;
+
+  if (!selectedParticipant) {
+    alert('참가자를 선택해주세요');
+    return;
+  }
+
+  const verseId = verses[currentVerseIndex].id;
+
+  if (!partialCompletions[selectedParticipant]) {
+    partialCompletions[selectedParticipant] = [];
+  }
+
+  // 이미 완료 점수가 있다면 제거
+  if (completions[selectedParticipant] && completions[selectedParticipant].includes(verseId)) {
+    completions[selectedParticipant] = completions[selectedParticipant].filter(id => id !== verseId);
+  }
+
+  if (!partialCompletions[selectedParticipant].includes(verseId)) {
+    partialCompletions[selectedParticipant].push(verseId);
+    saveData();
+    updateCurrentVerseParticipants();
+    showCelebration(true); // 부분 암송 축하 (간소화된 효과)
   }
 }
 
@@ -161,11 +216,18 @@ function markIncomplete() {
 
   const verseId = verses[currentVerseIndex].id;
 
+  // 완료 점수 제거
   if (completions[selectedParticipant] && completions[selectedParticipant].includes(verseId)) {
     completions[selectedParticipant] = completions[selectedParticipant].filter(id => id !== verseId);
-    saveData();
-    updateCurrentVerseParticipants();
   }
+
+  // 부분 점수 제거
+  if (partialCompletions[selectedParticipant] && partialCompletions[selectedParticipant].includes(verseId)) {
+    partialCompletions[selectedParticipant] = partialCompletions[selectedParticipant].filter(id => id !== verseId);
+  }
+
+  saveData();
+  updateCurrentVerseParticipants();
 }
 
 // 참가자 추가
@@ -184,6 +246,7 @@ function addParticipant() {
 
   participants.push(name);
   completions[name] = [];
+  partialCompletions[name] = [];
   saveData();
 
   newParticipantInput.value = '';
@@ -196,6 +259,7 @@ function removeParticipant(name) {
   if (confirm(`정말로 ${name} 참가자를 삭제하시겠습니까?`)) {
     participants = participants.filter(p => p !== name);
     delete completions[name];
+    delete partialCompletions[name];
     saveData();
     updateParticipantsTable();
     updateParticipantSelect();
@@ -203,17 +267,24 @@ function removeParticipant(name) {
   }
 }
 
+// 참가자별 총점 계산 (1점 + 0.5점)
+function calculateTotalScore(participant) {
+  const fullPoints = completions[participant] ? completions[participant].length : 0;
+  const halfPoints = partialCompletions[participant] ? partialCompletions[participant].length * 0.5 : 0;
+  return fullPoints + halfPoints;
+}
+
 // 참가자 테이블 업데이트
 function updateParticipantsTable() {
   participantsTable.innerHTML = '';
 
   participants.forEach(participant => {
-    const completedCount = completions[participant] ? completions[participant].length : 0;
+    const totalScore = calculateTotalScore(participant);
 
     const row = document.createElement('tr');
     row.innerHTML = `
           <td>${participant}</td>
-          <td>${completedCount} / ${verses.length}</td>
+          <td>${totalScore.toFixed(1)} / ${verses.length}</td>
           <td>
               <button class="danger" onclick="removeParticipant('${participant}')">삭제</button>
           </td>
@@ -229,17 +300,15 @@ function updateStats() {
   individualStats.innerHTML = '';
 
   participants.sort((a, b) => {
-    const aCompleted = completions[a] ? completions[a].length : 0;
-    const bCompleted = completions[b] ? completions[b].length : 0;
-    return bCompleted - aCompleted;
+    return calculateTotalScore(b) - calculateTotalScore(a);
   }).forEach(participant => {
-    const completedCount = completions[participant] ? completions[participant].length : 0;
-    const percentage = Math.round((completedCount / verses.length) * 100);
+    const totalScore = calculateTotalScore(participant);
+    const percentage = Math.round((totalScore / verses.length) * 100);
 
     const row = document.createElement('tr');
     row.innerHTML = `
           <td>${participant}</td>
-          <td>${completedCount} / ${verses.length}</td>
+          <td>${totalScore.toFixed(1)} / ${verses.length}</td>
           <td>${percentage}%</td>
       `;
 
@@ -250,14 +319,18 @@ function updateStats() {
   verseStats.innerHTML = '';
 
   verses.forEach((verse, index) => {
-    const completedParticipants = participants.filter(p =>
+    const fullCompletedCount = participants.filter(p =>
       completions[p] && completions[p].includes(verse.id)
+    ).length;
+
+    const partialCompletedCount = participants.filter(p =>
+      partialCompletions[p] && partialCompletions[p].includes(verse.id)
     ).length;
 
     const row = document.createElement('tr');
     row.innerHTML = `
           <td class="verse-number">${index + 1}. ${verse.reference}</td>
-          <td>${completedParticipants} / ${participants.length}</td>
+          <td>완료: ${fullCompletedCount}, 부분: ${partialCompletedCount}</td>
       `;
 
     verseStats.appendChild(row);
@@ -266,41 +339,41 @@ function updateStats() {
   // 순위 업데이트
   rankingsList.innerHTML = '';
 
-  // 참가자별 암송 완료 개수 계산 및 정렬
+  // 참가자별 암송 완료 개수 계산 및 정렬 (부분 점수 포함)
   const participantsWithScores = participants.map(participant => {
-    const completedCount = completions[participant] ? completions[participant].length : 0;
-    return { name: participant, count: completedCount };
-  }).sort((a, b) => b.count - a.count);
+    const score = calculateTotalScore(participant);
+    return { name: participant, score: score };
+  }).sort((a, b) => b.score - a.score);
 
   // 상위 10명만 선택
   const topParticipants = participantsWithScores.slice(0, 10);
 
   if (topParticipants.length > 0) {
     // 순위 계산을 위한 변수
-    let distinctCounts = [];
+    let distinctScores = [];
     topParticipants.forEach(p => {
-      if (!distinctCounts.includes(p.count)) {
-        distinctCounts.push(p.count);
+      if (!distinctScores.includes(p.score)) {
+        distinctScores.push(p.score);
       }
     });
-    distinctCounts.sort((a, b) => b - a);
+    distinctScores.sort((a, b) => b - a);
 
     // 각 참가자에게 순위 할당
     topParticipants.forEach(participant => {
       // 점수의 인덱스 + 1이 순위
-      const rank = distinctCounts.indexOf(participant.count) + 1;
+      const rank = distinctScores.indexOf(participant.score) + 1;
 
       const li = document.createElement('li');
       li.innerHTML = `
-              ${rank}위 - ${participant.name} <span class="badge badge-primary">${participant.count}개</span>
+              ${rank}위 - ${participant.name} <span class="badge badge-primary">${participant.score.toFixed(1)}점</span>
           `;
 
       // 메달 표시 (순위에 따른 메달)
-      if (rank === 1 && participant.count > 0) {
+      if (rank === 1 && participant.score > 0) {
         li.innerHTML += ' 🥇';
-      } else if (rank === 2 && participant.count > 0) {
+      } else if (rank === 2 && participant.score > 0) {
         li.innerHTML += ' 🥈';
-      } else if (rank === 3 && participant.count > 0) {
+      } else if (rank === 3 && participant.score > 0) {
         li.innerHTML += ' 🥉';
       }
 
@@ -310,18 +383,19 @@ function updateStats() {
 }
 
 // 축하 효과 표시
-function showCelebration() {
+function showCelebration(isPartial = false) {
   celebration.classList.add('active');
 
-  // 색종이 효과 생성
-  for (let i = 0; i < 100; i++) {
+  // 색종이 효과 생성 (부분 암송은 더 적은 색종이)
+  const confettiCount = isPartial ? 30 : 100;
+  for (let i = 0; i < confettiCount; i++) {
     createConfetti();
   }
 
   setTimeout(() => {
     celebration.classList.remove('active');
     celebration.innerHTML = '';
-  }, 3000);
+  }, isPartial ? 1500 : 3000);
 }
 
 // 색종이 생성
@@ -391,6 +465,7 @@ function setupEventListeners() {
   });
 
   markCompleteBtn.addEventListener('click', markComplete);
+  markPartialBtn.addEventListener('click', markPartial);
   markIncompleteBtn.addEventListener('click', markIncomplete);
 
   addParticipantBtn.addEventListener('click', addParticipant);

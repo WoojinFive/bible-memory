@@ -192,6 +192,16 @@ button.warning {
   border-left: 3px solid var(--success-color);
 }
 
+.participant-card.partial {
+  background-color: #FFF8E1;
+  border-left: 3px solid var(--warning-color);
+}
+
+.badge-warning {
+  background-color: var(--warning-color);
+  color: var(--dark-color);
+}
+
 .add-participant {
   margin-top: 20px;
   display: flex;
